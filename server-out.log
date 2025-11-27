@@ -1,0 +1,7 @@
+Server listening on http://localhost:3000
+[cache/prefetch] job created key= 1e65aa478f23464f99dc0d8fc6be11ebf168feb8 link= https://tubidy.cool/watch/Xxa8GFmbeVisnN7rDEcT5g_3D_3D/mp4/fs format= mp3
+[cache/prefetch] resolving link... https://tubidy.cool/watch/Xxa8GFmbeVisnN7rDEcT5g_3D_3D/mp4/fs
+[cache/prefetch] resolved to https://tubidy.cool/watch.php?id=Xxa8GFmbeVisnN7rDEcT5g_3D_3D&p=mp4&t=ssl&act=down&lnk=3
+[cache/prefetch] preparing to download from https://tubidy.cool/watch.php?id=Xxa8GFmbeVisnN7rDEcT5g_3D_3D&p=mp4&t=ssl&act=down&lnk=3
+[cache/prefetch] head indicates HTML or no content-type; fetching page to search for media links
+[cache/prefetch] no media candidates found on page; will attempt to download original URL

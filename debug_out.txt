@@ -1,0 +1,62 @@
+﻿Query: vintage
+tubidy-scrape.search returned 0 items
+[]
+
+Fetch attempt 1: status= 200 len= 0
+Fetch attempt 2 (with UA): status= 200 len= 46298
+
+Fetched raw HTML (first 2000 chars):
+
+<!doctype html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en-ZA"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8" lang="en-ZA"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9" lang="en-ZA"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en-ZA"> <!--<![endif]-->
+    <head lang="en-ZA">
+
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>vintage Download MP3&MP4 | Tubidy</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content="Discover and download vintage MP3&MP4 files from Tubidy, the ultimate source for music and videos. Fast, easy, and free!" />
+		<meta name="keywords" content="tubidy, tubidy mp3, tubidy mp4, tubidy mobile, tubidy.com, tubidy.mobi, tubidy.net" />        <meta name="robots" content="index, follow" />
+ 		<link rel="canonical" href="https://tubidy.cool/mp4/vintage" />
+		<link rel="shortcut icon" href="//tubidy.cool/images/favicon.png" />
+		<link rel="apple-touch-icon" href="//tubidy.cool/apple-touch-icon.png" />
+		<link rel="preload" href="//tubidy.cool/fonts/Ubuntu_300.woff" as="font" crossorigin="anonymous" />
+		<link rel="preload" href="//tubidy.cool/fonts/Ubuntu_400.woff" as="font" crossorigin="anonymous" />
+		<link rel="preload" href="//tubidy.cool/fonts/Ubuntu_500.woff" as="font" crossorigin="anonymous" />
+		<link rel="preload" href="//tubidy.cool/fonts/fontawesome-webfont.woff2?v=4.4.0" as="font" crossorigin="anonymous" />
+		<link rel="preload" href="//tubidy.cool/images/logo.svg" as="image" />
+		<link rel="preload" href="//tubidy.cool/js/vendor/modernizr-2.8.3-respond-1.4.2.min.js" as="script" />
+		<link rel="preload" href="//tubidy.cool/js/vendor/jquery-1.11.2.min.js" as="script" />
+		<link rel="preload" href="//tubidy.cool/js/vendor/bootstrap.min.js" as="script" />
+		<link rel="stylesheet" href="//tubidy.cool/css/all12.css" as="style"
+
+Parsed items count: 6
+[
+  {
+    title: "╨ò╨▓╨░ - ╨▓╨╕╨╜╤é╨░╨╢ - Eva - Vintage (lonely, lonely, I guess I'm lonely tiktok version) (Lyrics)",
+    link: '//tubidy.cool/watch/1bG7egH_2F8lNvYcSuxAGVKw_3D_3D/mp4/fs'
+  },
+  {
+    title: 'Vintage Culture, Doozie feat. Lauren Nicole - Get Naughty [AFFAIRS 002]',
+    link: '//tubidy.cool/watch/nlO_2Bjwo8ZxE2vOeX8YE9RA_3D_3D/mp4/fs'
+  },
+  {
+    title: 'Vintage Culture feat. Noah Kulaga - Upon Your Skin [AFFAIRS 001]',
+    link: '//tubidy.cool/watch/fyOaqGORY2_2BF2Yg90yhjXg_3D_3D/mp4/fs'
+  },
+  {
+    title: 'Buy This & Walk By That! Vintage Thrift Shopping - Fire King, Pyrex, Platters, Furniture by Dr. Lori',
+    link: '//tubidy.cool/watch/Ir4edB9R8l0hOYW4mZWJzA_3D_3D/mp4/fs'
+  },
+  {
+    title: 'Vintage Intro XX',
+    link: '//tubidy.cool/watch/j5z36FXCbnPXEEc46virGA_3D_3D/mp4/fs'
+  },
+  {
+    title: 'Vintage - Roman',
+    link: '//tubidy.cool/watch/IE9VsQJ8ZU7rL0J_2BmUPo9g_3D_3D/mp4/fs'
+  }
+]

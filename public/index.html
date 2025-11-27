@@ -1,0 +1,411 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Tubidy Stream Player (demo)</title>
+    <style>
+      :root {
+        --bg: #f5f7fb;
+        --card: #ffffff;
+        --muted: #6b7280;
+        --accent: #2563eb;
+        --accent-2: #06b6d4;
+        --success: #10b981;
+        --shadow: 0 6px 18px rgba(15,23,42,0.08);
+        --radius: 10px;
+      }
+      html,body{height:100%;}
+      /* animated sideways black <-> lime green gradient background */
+      :root { --bg-anim-duration: 30s; --lime: #32CD32; }
+      body {
+        color: #0f172a; font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; margin: 0; padding: 24px;
+        background-image: linear-gradient(90deg, #000 0%, #000 35%, var(--lime) 65%, var(--lime) 100%);
+        background-size: 200% 100%;
+        animation: bg-pan var(--bg-anim-duration) linear infinite;
+      }
+
+      @keyframes bg-pan {
+        0% { background-position: 0% 0%; }
+        50% { background-position: 100% 0%; }
+        100% { background-position: 0% 0%; }
+      }
+      .container { max-width: 980px; margin: 0 auto; }
+      header { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; }
+      h2 { margin: 0; font-weight: 600; font-size: 20px; color: #0b1220; }
+      .controls { display:flex; gap:12px; align-items:center; margin-bottom:12px; }
+      input[type="text"], input[type="search"] { padding:10px 12px; border-radius:8px; border:1px solid rgba(15,23,42,0.08); background: #fff; min-width: 280px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.5); }
+      button { padding:10px 14px; border-radius:8px; border: none; cursor: pointer; font-weight:600; }
+      button:hover { filter:brightness(.98); }
+      #searchTubidy { background: linear-gradient(90deg,var(--accent),var(--accent-2)); color: #fff; box-shadow: var(--shadow); }
+      #toggleDebug { background: transparent; color: var(--muted); border: 1px solid rgba(15,23,42,0.06); padding:8px 10px; border-radius:8px; }
+
+      /* Search bar frosted glass styling */
+      .controls label { color: #fff; font-weight:600; }
+      .controls input#query {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: #fff;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        padding:10px 12px;
+        border-radius:8px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+      }
+      .controls input#query::placeholder { color: rgba(255,255,255,0.7); }
+      /* Make search button more consistent with lime buttons but keep bold */
+      #searchTubidy {
+        background: rgba(255,255,255,0.18) !important;
+        color: #fff !important;
+        border: 1.5px solid rgba(255,255,255,0.18) !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        backdrop-filter: blur(12px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(12px) saturate(180%) !important;
+        transition: background 0.2s, box-shadow 0.2s;
+      }
+
+      audio#player { width:100%; margin: 12px 0 18px 0; border-radius:8px; box-shadow: var(--shadow); }
+
+      .card { background: var(--card); border-radius: var(--radius); padding: 14px; box-shadow: var(--shadow); }
+
+      /* Search card: make the search bar live in its own frosted window */
+      .search-card {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.08);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        color: #fff;
+        margin-bottom: 12px;
+        padding: 12px;
+        box-shadow: 0 0 6px 1px #39ff14cc, 0 0 12px 2px #32CD3266 inset;
+      }
+      .search-card .controls { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+      .search-card label { margin:0; }
+      .search-card input#query { flex:1; min-width:400px; max-width:800px; }
+
+      #results { list-style:none; padding:0; margin: 12px 0 8px 0; display:grid; grid-template-columns: 1fr; gap:10px; }
+      #results li { display:flex; align-items:center; gap:12px; padding:10px; background:var(--card); border-radius:8px; box-shadow: 0 2px 8px rgba(2,6,23,0.04); }
+      #results li span { flex:1; color:#071022; }
+      #results li button { padding:8px 10px; border-radius:6px; font-weight:600; }
+      #results li button.play { background: linear-gradient(90deg,var(--accent),#4f46e5); color:#fff; border:none; }
+      #results li button.add { background: transparent; color: #065f46; border: 1px solid rgba(6,95,70,0.08); }
+      #results li button.remove { background:transparent; color:var(--muted); border:1px solid rgba(15,23,42,0.06); }
+
+      #progressWrap { display:none; width:100%; background: linear-gradient(90deg,#eef2ff,#f0f9ff); border-radius:999px; overflow:hidden; height:12px; }
+      #progressBar { height:12px; width:0; background: linear-gradient(90deg,var(--accent),var(--accent-2)); transition: width 240ms ease; }
+      #searchProgressWrap { display:none; width:100%; background: linear-gradient(90deg,#f8fafc,#fff); border-radius:999px; overflow:hidden; height:8px; margin-bottom:6px; }
+      #searchProgressBar { height:8px; width:0; background: linear-gradient(90deg,#93c5fd,#60a5fa); transition: width 200ms ease; }
+
+      /* Playlist frosted glass + white text + lime buttons */
+      .playlist-card {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.08);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        color: #fff;
+        box-shadow: 0 0 6px 1px #39ff14cc, 0 0 12px 2px #32CD3266 inset;
+      }
+      .playlist-card h3 { color: #fff; }
+      .playlist-card input, .playlist-card select {
+        background: rgba(255,255,255,0.12);
+        color: #fff;
+        border: 1px solid rgba(255,255,255,0.18);
+        border-radius: 8px;
+        padding: 10px;
+        font-weight: 600;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+      }
+      .playlist-card select option {
+        background: rgba(255,255,255,0.18);
+        color: #fff;
+        font-weight: 600;
+        border-radius: 8px;
+        padding: 10px;
+      }
+      .playlist-card input::placeholder { color: rgba(255,255,255,0.7); }
+      .playlist-card label { color: #fff; }
+      .playlist-card ul#playlistItems li {
+        background: rgba(0,0,0,0.35);
+        border: 1px solid rgba(255,255,255,0.06);
+        box-shadow: none;
+        color: #fff;
+        border-radius: 12px;
+        margin-bottom: 8px;
+        padding: 12px;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .playlist-card ul#playlistItems li.playing {
+        background: rgba(50,205,50,0.18) !important;
+        box-shadow: 0 0 0 2px #32cd32 !important;
+        border: 2px solid #32cd32 !important;
+      }
+      .playlist-card span { color: #fff; }
+      .playlist-card .cache-badge {
+        background: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        color: #39ff14 !important;
+        padding: 0 !important;
+        margin: 0 4px 0 0 !important;
+        font-size: 18px !important;
+        display: inline-block !important;
+        border-radius: 0 !important;
+      }
+      .playlist-card .cache-badge.ready {
+        content: '';
+      }
+      .playlist-card .cache-badge.ready::before {
+        content: '\2714';
+        color: #39ff14;
+        font-size: 18px;
+      }
+      .playlist-card .cache-badge.preparing,
+      .playlist-card .cache-badge.error,
+      .playlist-card .cache-badge {
+        display: none;
+      }
+      .playlist-card button { background: #32CD32; color: #000; border: none; padding: 8px 12px; border-radius: 8px; font-weight: 700; }
+      .playlist-card button:hover { filter: brightness(0.95); }
+
+      /* Results card: match playlist style but scoped to results */
+      .results-card {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid rgba(255,255,255,0.08);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        color: #fff;
+        box-shadow: 0 0 6px 1px #39ff14cc, 0 0 12px 2px #32CD3266 inset;
+      }
+      .results-card h3 { color: #fff; }
+      .results-card ul#results li { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); }
+      /* Ensure result titles are white (override earlier #results li span rule) */
+      .results-card #results li span { color: #fff !important; }
+      .results-card span { color: #fff; }
+      .results-card button {
+        background: #32CD32 !important;
+        color: #000 !important;
+        border: none !important;
+        padding: 8px 12px !important;
+        border-radius: 8px !important;
+        font-weight: 700 !important;
+      }
+      .results-card button.play, .results-card button.add {
+        background: rgba(50,205,50,0.18) !important;
+        border: 1px solid rgba(50,205,50,0.22) !important;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        color: #000 !important;
+      }
+      .results-card button.remove { background: #32CD32 !important; }
+      .results-card button:hover { filter: brightness(0.95); }
+
+      /* Custom player card (themed like Spotify but lime/black) */
+      .player-card { display:flex; align-items:center; gap:12px; padding:12px; border-radius:12px; margin-bottom:12px; background: rgba(0,0,0,0.35); color:#fff; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border:1px solid rgba(255,255,255,0.06); box-shadow: 0 0 6px 1px #39ff14cc, 0 0 12px 2px #32CD3266 inset; }
+      .player-left { width:72px; }
+      .player-art { width:72px; height:72px; background: linear-gradient(135deg,#071022,#0b1220); border-radius:8px; box-shadow: 0 6px 24px rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; color: rgba(255,255,255,0.7); font-weight:700; }
+      .player-center { flex:1; display:flex; flex-direction:column; gap:8px; }
+      .player-meta { display:flex; flex-direction:column; gap:2px; }
+      .player-title { font-size:16px; font-weight:700; color:#fff; }
+      .player-sub { font-size:13px; color: rgba(255,255,255,0.75); }
+      .player-controls { display:flex; gap:14px; align-items:center; justify-content:center; width:100%; }
+      .ctl { background: #32CD32; color: #000; border: none; padding:10px 12px; border-radius:10px; cursor:pointer; font-weight:800; box-shadow: 0 6px 18px rgba(50,205,50,0.12); }
+      .ctl.small { padding:10px 14px; font-size:16px; min-width:48px; min-height:40px; }
+      .ctl.play { padding:12px 16px; font-size:20px; border-radius:50%; width:64px; height:64px; display:flex; align-items:center; justify-content:center; }
+      /* Slightly larger controls on wider screens */
+      @media (min-width: 900px) {
+        .ctl.small { padding:12px 16px; font-size:18px; min-width:56px; min-height:44px; }
+        .ctl.play { width:76px; height:76px; font-size:22px; }
+      }
+      .player-progress-wrap { display:flex; gap:8px; align-items:center; }
+      .player-progress { flex:1; height:8px; background: rgba(255,255,255,0.06); border-radius:999px; overflow:hidden; cursor:pointer; }
+      .player-progress-bar { width:0%; height:100%; background: linear-gradient(90deg,#86efac,#32cd32); transition: width 120ms linear; }
+      .time { font-size:12px; color: rgba(255,255,255,0.8); width:42px; text-align:center; }
+      .player-right { width:64px; display:flex; justify-content:flex-end; }
+
+      /* Settings button and panel */
+      #settingsBtn { background: rgba(255,255,255,0.06); color:#fff; border:1px solid rgba(255,255,255,0.08); padding:8px 10px; border-radius:8px; margin-left:6px; cursor:pointer; }
+      #settingsBtn:hover { filter:brightness(0.95); }
+      .settings-panel { position:fixed; right:18px; top:72px; width:300px; background: rgba(0,0,0,0.5); border-radius:10px; box-shadow: 0 0 16px 2px #39ff14, 0 0 32px 4px #32CD32 inset, 0 12px 34px rgba(0,0,0,0.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border:1px solid rgba(255,255,255,0.06); z-index:1200; }
+      .settings-panel .settings-header { padding:10px 12px; font-weight:700; color:#fff; border-bottom:1px solid rgba(255,255,255,0.04); }
+
+      #debugPanel { margin-top:14px; }
+      #debugLog { height:220px; overflow:auto; background:#0b1220; color:#a7f3d0; padding:10px; border-radius:8px; font-family:monospace; font-size:13px; }
+
+      #nowPlaying { font-size:14px; padding:8px 10px; border-radius:8px; background: linear-gradient(90deg,#ffffff,#fbfdff); box-shadow: 0 2px 8px rgba(2,6,23,0.04); }
+      #results li.playing { border-left: 4px solid var(--accent-2); background: linear-gradient(90deg,#fbfdff,#ffffff); }
+
+      /* always render results as a single-column list */
+      /* cache badge styles */
+      .cache-badge { padding:4px 8px; border-radius:999px; font-size:12px; margin-left:8px; background:#eef2ff; color:var(--muted); border:1px solid rgba(15,23,42,0.04); }
+      .cache-badge.ready { background: var(--success); color: #fff; border: none; }
+      .cache-badge.preparing { background: #fffbeb; color: #92400e; border: 1px solid rgba(146,64,14,0.06); }
+      .cache-badge.error { background: #fff1f2; color: #991b1b; border: 1px solid rgba(153,27,27,0.06); }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+      </header>
+
+      <div class="card search-card">
+        <div class="controls">
+          <input id="query" placeholder="song or artist" />
+          <button id="searchTubidy" style="background:rgba(255,255,255,0.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;border:1.5px solid rgba(255,255,255,0.18);padding:10px 16px;border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(50,205,50,0.10);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="11" cy="11" r="8" stroke="#fff" stroke-width="2.5" fill="none"/>
+              <line x1="17" y1="17" x2="22" y2="22" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <span style="flex:1"></span>
+          <button id="settingsBtn" title="Settings" aria-label="Settings" style="margin-left:auto;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7z" fill="#FFFFFF" />
+              <path d="M19.4 13.5a7.9 7.9 0 0 0 .06-1 7.9 7.9 0 0 0-.06-1l2.11-1.65a.5.5 0 0 0 .12-.63l-2-3.46a.5.5 0 0 0-.6-.22l-2.49 1a8.2 8.2 0 0 0-1.73-1l-.38-2.65A.5.5 0 0 0 13.9 2h-3.8a.5.5 0 0 0-.5.42l-.38 2.65a8.2 8.2 0 0 0-1.73 1l-2.49-1a.5.5 0 0 0-.6.22l-2 3.46a.5.5 0 0 0 .12.63L4.6 11.5c-.04.33-.06.66-.06 1s.02.67.06 1L2.49 15.15a.5.5 0 0 0-.12.63l2 3.46c.14.24.44.34.7.22l2.49-1c.53.4 1.11.73 1.73 1l.38 2.65c.05.26.28.42.5.42h3.8c.22 0 .45-.16.5-.42l.38-2.65c.62-.27 1.2-.6 1.73-1l2.49 1c.26.12.56.02.7-.22l2-3.46a.5.5 0 0 0-.12-.63L19.4 13.5z" fill="#FFFFFF" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      
+
+      <div class="player-card" id="playerCard" style="display:none; position:relative;">
+            <!-- Corner spinner for loading -->
+            <div id="cornerSpinner" style="display:none; position:fixed; top:18px; right:18px; z-index:2000;">
+              <div style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;">
+                <div style="width:16px;height:16px;border:3px solid #fff;border-top:3px solid #eee;border-radius:50%;animation:spin 1s linear infinite;"></div>
+              </div>
+            </div>
+            <style>
+              @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+              #cornerSpinner { transition: opacity 0.2s; }
+            </style>
+        <div class="player-center" style="margin-left:0;">
+          <div class="player-meta">
+            <div id="playerTitle" class="player-title">Not playing</div>
+            <div id="playerSub" class="player-sub">—</div>
+          </div>
+          <div class="player-controls">
+            <button id="prevTrack" class="ctl small" title="Previous">◄◄</button>
+            <button id="playerToggle" class="ctl play" title="Play/Pause">▶</button>
+            <button id="nextTrack" class="ctl small" title="Next">►►</button>
+          </div>
+          <div class="player-progress-wrap">
+            <span id="playerCur" class="time">0:00</span>
+            <div id="playerProgress" class="player-progress"><div id="playerProgressBar" class="player-progress-bar"></div></div>
+            <span id="playerDur" class="time">0:00</span>
+          </div>
+        </div>
+        <div class="player-right">
+          <button id="playerVolumeBtn" class="ctl small" title="Mute/Unmute">🔊</button>
+        </div>
+      </div>
+
+      <audio id="player" ></audio>
+
+      <div class="card results-card" id="resultsCard" style="display:none; position:relative;">
+        <h3 style="margin-top:0; display:flex; align-items:center; justify-content:space-between;">
+          <span>Results</span>
+          <span id="toggleResultsCollapse" title="Collapse results" style="cursor:pointer;display:flex;align-items:center;">
+            <svg id="resultsCollapseIcon" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M7 10l5 5 5-5" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </h3>
+        <div id="resultsCollapseWrap">
+          <ul id="results"></ul>
+          <div id="loadMoreWrap" style="margin-top:12px; text-align:center"></div>
+        </div>
+      </div>
+
+        <!-- Settings panel (hidden by default) -->
+        <div id="settingsPanel" class="settings-panel" style="display:none;">
+          <div class="settings-header">Settings <button id="closeSettings" class="small" style="float:right;background:transparent;color:#fff;border:none;">✕</button></div>
+          <div style="padding:12px;">
+            <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;color:#fff"><input id="settingsShowDebug" type="checkbox" /> Show debug</label>
+            <div style="margin-bottom:12px;">
+              <button id="settingsImportPlaylistBtn" style="background:#32CD32;color:#000;border:none;padding:8px 14px;border-radius:8px;font-weight:700;">Import Playlist</button>
+              <input id="settingsImportFile" type="file" style="display:none;" />
+            </div>
+            <div style="margin-top:10px;color:rgba(255,255,255,0.85)">More settings coming soon...</div>
+          </div>
+        </div>
+
+      <div id="playlistCardWrap">
+        <div class="playlist-card" id="playlistCard" style="display:none; position:relative;">
+          <h3 style="display:flex;align-items:center;justify-content:space-between;">
+            <span>Playlists</span>
+            <button id="playlistAddBtn" title="Create playlist" style="background:transparent;border:none;padding:0;margin:0;display:flex;align-items:center;justify-content:center;">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="11" fill="rgba(255,255,255,0.85)"/>
+                <path d="M12 8v8M8 12h8" stroke="#32CD32" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </h3>
+          <div id="playlistSwitcherWrap" style="display:flex;gap:10px;align-items:center;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;">
+            <!-- playlist switcher cards will be rendered here -->
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;background:rgba(255,255,255,0.08);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-radius:12px;padding:10px;">
+            <button id="deletePlaylistBtn" title="Delete playlist" style="background:transparent;border:none;padding:0 8px;display:flex;align-items:center;justify-content:center;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 6l12 12M6 18L18 6" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </button>
+            <button id="playPlaylistBtn" title="Play playlist" style="background:transparent;border:none;padding:0 8px;display:flex;align-items:center;justify-content:center;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="9,7 19,12 9,17" fill="#fff"/></svg>
+            </button>
+            <button id="exportPlaylistBtn" title="Export playlist" style="background:transparent;border:none;padding:0 8px;display:flex;align-items:center;justify-content:center;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 16v-8M8 12h8M4 20h16" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </button>
+            <button id="importPlaylistBtn" title="Import playlist" style="background:transparent;border:none;padding:0 8px;display:flex;align-items:center;justify-content:center;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 8v8M8 12h8" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </button>
+            <input id="importFile" type="file" style="display:none;" />
+          </div>
+          <div style="position:relative;display:flex;align-items:center;justify-content:center;margin:24px 0 18px 0;">
+            <div id="currentPlaylistTitle" style="font-size:2.3em;font-weight:800;color:#fff;letter-spacing:0.02em;flex:1;text-align:center;display:none;"></div>
+            <button id="playlistMenuBtn" title="Playlist options" style="background:transparent;border:none;outline:none;position:absolute;right:0;top:50%;transform:translateY(-50%);padding:0 8px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="5" cy="12" r="2.2" fill="#fff"/><circle cx="12" cy="12" r="2.2" fill="#fff"/><circle cx="19" cy="12" r="2.2" fill="#fff"/></svg>
+            </button>
+            <div id="playlistMenuPopup" style="display:none;position:absolute;right:0;top:110%;background:rgba(0,0,0,0.85);border-radius:12px;box-shadow:0 2px 12px #32CD3266;padding:16px 10px;z-index:3000;min-width:160px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);">
+              <div style="display:flex;gap:10px;align-items:center;justify-content:center;">
+                <button id="playlistMenuDeleteBtn" title="Delete playlist" style="background:transparent;border:none;padding:0 8px;display:flex;align-items:center;justify-content:center;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 6l12 12M6 18L18 6" stroke="#fff" stroke-width="2.5" stroke-linecap="round"></path></svg>
+                </button>
+                <button id="playlistMenuPlayBtn" title="Play playlist" style="background:transparent;border:none;padding:0 8px;display:flex;align-items:center;justify-content:center;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="9,7 19,12 9,17" fill="#fff"></polygon></svg>
+                </button>
+                <button id="playlistMenuExportBtn" title="Export playlist" style="background:transparent;border:none;padding:0 8px;display:flex;align-items:center;justify-content:center;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 16v-8M8 12h8M4 20h16" stroke="#fff" stroke-width="2.5" stroke-linecap="round"></path></svg>
+                </button>
+                <button id="playlistMenuImportBtn" title="Import playlist" style="background:transparent;border:none;padding:0 8px;display:flex;align-items:center;justify-content:center;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 8v8M8 12h8" stroke="#fff" stroke-width="2.5" stroke-linecap="round"></path></svg>
+                </button>
+                <input id="playlistMenuImportFile" type="file" style="display:none;">
+              </div>
+            </div>
+          </div>
+          <ul id="playlistItems"></ul>
+        </div>
+      </div>
+      <div id="playlistPopup" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:2000;background:rgba(0,0,0,0.25);align-items:center;justify-content:center;">
+        <div style="background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.06);box-shadow:0 0 6px 1px #39ff14cc,0 0 12px 2px #32CD3266 inset;color:#fff;border-radius:16px;padding:32px 24px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);max-width:340px;width:90vw;margin:auto;display:flex;flex-direction:column;gap:18px;">
+          <h3 style="margin:0 0 8px 0;font-size:1.3em;font-weight:700;">Create your first playlist</h3>
+          <input id="popupPlaylistName" placeholder="Playlist name" style="padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#fff;font-size:1.1em;" />
+          <button id="popupCreateBtn" style="background:#32CD32;color:#000;border:none;padding:10px 18px;border-radius:10px;font-weight:700;font-size:1.1em;">Create Playlist</button>
+        </div>
+      </div>
+
+      <div id="debugPanel">
+        <h3>Debug</h3>
+        <pre id="debugLog"></pre>
+      </div>
+    </div>
+
+    
+
+    <script src="/app.js"></script>
+  </body>
+</html>
